@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Feedback Calls – My Leads</title>
+<style>
+  :root{
+    --bg:#f5f7f6; --surface:#fff; --ink:#1b2b27; --muted:#6b7b76; --line:#dbe3e0;
+    --brand:#0f6b5c; --brand-ink:#fff; --head:#e4efec; --warn:#b3261e; --ok:#0f6b5c;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#101816; --surface:#17211e; --ink:#e6efec; --muted:#93a39e; --line:#2a3a35;
+      --brand:#3fb59f; --brand-ink:#08201b; --head:#1e2f2a; --warn:#ff8a80; --ok:#3fb59f; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+  header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+  header h1{font-size:16px;margin:0 auto 0 0}
+  input,select,button,textarea{font:inherit;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 10px}
+  button{cursor:pointer}
+  button.primary{background:var(--brand);color:var(--brand-ink);border-color:var(--brand);font-weight:600}
+  button:disabled{opacity:.6;cursor:wait}
+  :focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+  #login{max-width:340px;margin:12vh auto;padding:24px;background:var(--surface);border:1px solid var(--line);border-radius:10px;display:grid;gap:12px}
+  #login h1{margin:0 0 4px;font-size:18px}
+  .err{color:var(--warn);min-height:1.2em;margin:0}
+  #app{display:none}
+  .bar{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px;align-items:center}
+  .bar .count{margin-left:auto;color:var(--muted)}
+  .wrap{overflow:auto;max-height:calc(100vh - 120px);margin:0 16px 16px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+  table{border-collapse:collapse;width:max-content;min-width:100%}
+  th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;max-width:280px}
+  th{position:sticky;top:0;background:var(--head);font-weight:600;white-space:nowrap;cursor:pointer;user-select:none;z-index:1}
+  th.nosort{cursor:default}
+  td.wrapcol{white-space:pre-line;min-width:220px}
+  tr:hover td{background:color-mix(in srgb,var(--head) 50%,transparent)}
+  tr.saved td{animation:flash 1.2s}
+  @keyframes flash{from{background:color-mix(in srgb,var(--ok) 30%,transparent)}to{background:transparent}}
+  @media (prefers-reduced-motion: reduce){tr.saved td{animation:none}}
+  .empty{padding:40px;text-align:center;color:var(--muted)}
+  dialog{border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);padding:0;width:min(520px,94vw)}
+  dialog::backdrop{background:rgba(0,0,0,.45)}
+  #form{padding:18px;display:grid;gap:12px}
+  #form h2{margin:0;font-size:16px}
+  #form label{display:grid;gap:4px;font-weight:600}
+  #form label small{font-weight:400;color:var(--muted)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  pre#hist{margin:0;max-height:110px;overflow:auto;white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px;font:inherit}
+  .actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+</style>
+</head>
+<body>
+
+<form id="login" onsubmit="return false">
+  <h1>Feedback Calls</h1>
+  <label>Your name <select id="who"></select></label>
+  <label>PIN <input id="pin" type="password" inputmode="numeric" autocomplete="current-password"></label>
+  <p id="err" class="err" role="alert"></p>
+  <button class="primary" id="go">View my leads</button>
+</form>
+
+<div id="app">
+  <header>
+    <h1 id="title"></h1>
+    <label>Month <select id="tab"></select></label>
+    <button id="refresh">Refresh</button>
+    <button id="logout">Log out</button>
+  </header>
+  <div class="bar">
+    <input id="q" type="search" placeholder="Search name, mobile, email, feedback" size="34">
+    <select id="status"><option value="">All statuses</option></select>
+    <span class="count" id="count"></span>
+  </div>
+  <div class="wrap"><table id="tbl"></table></div>
+</div>
+
+<dialog id="dlg">
+  <form id="form" onsubmit="return false">
+    <h2 id="dtitle"></h2>
+    <label>Status <select id="f_status"></select></label>
+    <div class="two">
+      <label>Last followup date <small id="h_last"></small><input type="date" id="f_last"></label>
+      <label>Next followup date <small id="h_next"></small><input type="date" id="f_next"></label>
+    </div>
+    <label>No. of followup calls (max 10) <input type="number" id="f_count" min="0" max="10"></label>
+    <button type="button" id="logcall">Log a call today (sets last date to today, calls +1)</button>
+    <label>Earlier feedback <pre id="hist"></pre></label>
+    <label>New feedback <small>Saved as “*26 Oct. your note” below the earlier lines</small>
+      <textarea id="f_note" rows="3" maxlength="500"></textarea></label>
+    <p id="derr" class="err" role="alert"></p>
+    <div class="actions">
+      <button type="button" id="cancel">Cancel</button>
+      <button type="button" class="primary" id="save">Save to sheet</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+// ====== CONFIG: edit these two ======
+const API_URL = "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
+const EXECUTIVES = ["Krishna","Ankur","Vivesh","Harshit Dixit","Jai"]; // must match CALL BY PERSON values
+// ====================================
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let S = {name:"", pin:"", tab:"", headers:[], rows:[], statusOptions:[], sortCol:-1, sortAsc:true, editing:null};
+
+$("who").innerHTML = EXECUTIVES.map(n => `<option>${esc(n)}</option>`).join("");
+const hi = re => S.headers.findIndex(h => re.test(h));
+const IX = () => ({status:hi(/^status$/i), last:hi(/^last followup/i), next:hi(/^next followup/i), count:hi(/^no\. of followup/i), fb:hi(/^feedback$/i), id:0});
+
+async function load(){
+  const url = `${API_URL}?name=${encodeURIComponent(S.name)}&pin=${encodeURIComponent(S.pin)}&tab=${encodeURIComponent(S.tab)}`;
+  let data;
+  try { data = await (await fetch(url)).json(); }
+  catch(e){ throw new Error("Could not reach the sheet. Check API_URL and that the web app access is “Anyone”."); }
+  if (data.error) throw new Error(data.error);
+  Object.assign(S, {headers:data.headers, rows:data.rows, tab:data.tab, statusOptions:data.statusOptions || []});
+  $("tab").innerHTML = data.tabs.map(t => `<option ${t===data.tab?"selected":""}>${esc(t)}</option>`).join("");
+  const si = IX().status;
+  const statuses = si < 0 ? [] : [...new Set(S.rows.map(r => r.v[si]).filter(Boolean))];
+  $("status").innerHTML = `<option value="">All statuses</option>` + statuses.map(s => `<option>${esc(s)}</option>`).join("");
+  render();
+}
+
+function render(flashN){
+  const q = $("q").value.toLowerCase(), st = $("status").value, ix = IX();
+  let rows = S.rows.filter(r => (!q || r.v.join(" ").toLowerCase().includes(q)) && (!st || r.v[ix.status] === st));
+  if (S.sortCol >= 0){
+    const c = S.sortCol, d = S.sortAsc ? 1 : -1;
+    rows = [...rows].sort((a,b) => d * String(a.v[c]).localeCompare(String(b.v[c]), undefined, {numeric:true}));
+  }
+  $("count").textContent = `${rows.length} of ${S.rows.length} leads`;
+  if (!rows.length){ $("tbl").innerHTML = `<tr><td class="empty">No leads match.</td></tr>`; return; }
+  const wide = S.headers.map(h => /feedback/i.test(h));
+  $("tbl").innerHTML =
+    `<thead><tr><th class="nosort"></th>${S.headers.map((h,i) => `<th data-i="${i}">${esc(h)}${S.sortCol===i?(S.sortAsc?" ▲":" ▼"):""}</th>`).join("")}</tr></thead>` +
+    `<tbody>${rows.map(r => `<tr class="${r.n===flashN?"saved":""}"><td><button data-edit="${r.n}">Edit</button></td>${r.v.map((v,i) => `<td class="${wide[i]?"wrapcol":""}">${esc(v)}</td>`).join("")}</tr>`).join("")}</tbody>`;
+}
+
+// ---- edit modal ----
+function openEdit(n){
+  const r = S.rows.find(x => x.n === n), ix = IX(); S.editing = r;
+  $("dtitle").textContent = `${r.v[1] || "Lead"}  (ID ${r.v[0]})`;
+  const cur = r.v[ix.status];
+  const opts = [...new Set([cur, ...S.statusOptions].filter(Boolean))];
+  $("f_status").innerHTML = opts.map(o => `<option ${o===cur?"selected":""}>${esc(o)}</option>`).join("");
+  $("f_last").value = ""; $("f_next").value = "";
+  $("h_last").textContent = ix.last >= 0 ? `now: ${r.v[ix.last]}` : "";
+  $("h_next").textContent = ix.next >= 0 ? `now: ${r.v[ix.next]}` : "";
+  $("f_count").value = ix.count >= 0 ? r.v[ix.count] : "";
+  $("hist").textContent = ix.fb >= 0 ? (r.v[ix.fb] || "(none yet)") : "";
+  $("f_note").value = ""; $("derr").textContent = "";
+  $("save").disabled = false; $("save").textContent = "Save to sheet";
+  $("dlg").showModal();
+}
+
+$("logcall").onclick = () => {
+  const d = new Date(), p = x => String(x).padStart(2,"0");
+  $("f_last").value = `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+  $("f_count").value = Math.min(10, (parseInt($("f_count").value) || 0) + 1);
+};
+$("cancel").onclick = () => $("dlg").close();
+
+$("save").onclick = async () => {
+  const r = S.editing; $("derr").textContent = "";
+  $("save").disabled = true; $("save").textContent = "Saving…";
+  const body = {name:S.name, pin:S.pin, tab:S.tab, row:r.n, userId:r.v[0],
+    status:$("f_status").value, last:$("f_last").value, next:$("f_next").value,
+    count:$("f_count").value, note:$("f_note").value};
+  try{
+    const res = await fetch(API_URL, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(body)});
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    const i = S.rows.findIndex(x => x.n === data.row.n); S.rows[i] = data.row;
+    $("dlg").close(); render(data.row.n);
+  }catch(e){
+    $("derr").textContent = e.message || "Save failed. Try again.";
+    $("save").disabled = false; $("save").textContent = "Save to sheet";
+  }
+};
+
+// ---- login / events ----
+async function start(){
+  $("err").textContent = "";
+  try{
+    await load();
+    $("login").style.display = "none"; $("app").style.display = "block";
+    $("title").textContent = `${S.name}'s leads`;
+    sessionStorage.setItem("fc", JSON.stringify({name:S.name,pin:S.pin}));
+  }catch(e){ $("err").textContent = e.message; $("login").style.display = "grid"; $("app").style.display = "none"; }
+}
+$("go").onclick = () => { S.name = $("who").value; S.pin = $("pin").value; S.tab = ""; start(); };
+$("pin").addEventListener("keydown", e => { if (e.key === "Enter") $("go").click(); });
+$("tab").onchange = () => { S.tab = $("tab").value; load().catch(e => alert(e.message)); };
+$("refresh").onclick = () => load().catch(e => alert(e.message));
+$("logout").onclick = () => { sessionStorage.removeItem("fc"); location.reload(); };
+$("q").oninput = () => render(); $("status").onchange = () => render();
+$("tbl").onclick = e => {
+  const b = e.target.closest("[data-edit]"); if (b) return openEdit(+b.dataset.edit);
+  const th = e.target.closest("th[data-i]"); if (!th) return;
+  const i = +th.dataset.i; S.sortAsc = S.sortCol === i ? !S.sortAsc : true; S.sortCol = i; render();
+};
+try{
+  const s = JSON.parse(sessionStorage.getItem("fc") || "null");
+  if (s){ S.name = s.name; S.pin = s.pin; $("who").value = s.name; start(); }
+}catch(e){}
+</script>
+</body>
+</html>
