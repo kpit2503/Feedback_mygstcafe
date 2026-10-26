@@ -91,6 +91,7 @@
     <button id="refresh">Refresh</button>
     <button id="logout">Log out</button>
   </header>
+  <div id="warn" class="err" role="alert" hidden style="margin:8px 16px;padding:8px 12px;border:1px solid var(--warn);border-radius:6px"></div>
   <div class="bar">
     <input id="q" type="search" placeholder="Search name, mobile, email, feedback" size="34">
     <button id="clearf" hidden>Clear all filters</button>
@@ -104,7 +105,7 @@
     <h2 id="dtitle"></h2>
     <label>Feedback <small>Edit anything, including earlier lines</small>
       <textarea id="f_fb" maxlength="5000"></textarea></label>
-    <button type="button" id="addline">+ Add today's line (*26 Oct. )</button>
+    <button type="button" id="addline">+ Add today's date, then type only the note</button>
     <label>Status <select id="f_status"></select></label>
     <div class="two">
       <label>Last followup date <small id="h_last"></small><input type="date" id="f_last"></label>
@@ -122,7 +123,7 @@
 
 <script>
 // ====== CONFIG: edit these ======
-const API_URL = "https://script.google.com/macros/s/AKfycbzh4NQ-6GxBKS6i8UY6CjOqq7a14hSvqkAqA9omkDEKAcbgWqu4-9BdwhrTGpUfEyLB/exec";
+const API_URL = "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
 const EXECUTIVES = ["Krishna","Ankur","Vivesh","Harshit Dixit","Jai"]; // must match CALL BY PERSON values
 const FEEDBACK_FIRST = true;   // show FEEDBACK right after Firm Name (no scrolling). false = sheet order
 // ================================
@@ -149,6 +150,8 @@ async function load(){
   catch(e){ throw new Error("Could not reach the sheet. Check API_URL and that the web app access is “Anyone”."); }
   if (data.error) throw new Error(data.error);
   if (S.tab && data.tab !== S.tab){ S.filters = {}; S.sort = {col:-1, asc:true}; }   // saved tab no longer exists
+  $("warn").hidden = data.v >= 3;
+  $("warn").textContent = "The Google Apps Script is an old version, so edits will not save. In Apps Script: Deploy > Manage deployments > pencil > Version: New version > Deploy.";
   Object.assign(S, {headers:data.headers, rows:data.rows, tab:data.tab, statusOptions:data.statusOptions || []});
   $("tab").innerHTML = data.tabs.map(t => `<option ${t===data.tab?"selected":""}>${esc(t)}</option>`).join("");
   render();
@@ -274,10 +277,20 @@ function openEdit(n){
 }
 
 $("addline").onclick = () => {
-  const t = $("f_fb"), d = new Date();
-  t.value = (t.value && !t.value.endsWith("\n") ? t.value + "\n" : t.value) + `*${d.getDate()} ${MON[d.getMonth()]}. `;
+  const t = $("f_fb"), d = new Date(), stamp = `*${d.getDate()} ${MON[d.getMonth()]}.`;
+  const last = t.value.trimEnd().split("\n").pop().trim();
+  if (last !== stamp) t.value = (t.value && !t.value.endsWith("\n") ? t.value + "\n" : t.value) + stamp + " ";
   t.focus(); t.setSelectionRange(t.value.length, t.value.length); t.scrollTop = t.scrollHeight;
 };
+// Tidy the text on save: "*26 Oct. *26 Oct note" -> "*26 Oct. note"; drop an unused bare date line the button added
+function cleanFb(text){
+  let t = text.replace(/\r\n/g, "\n");
+  t = t.replace(/^(\*\d{1,2} [A-Za-z]{3,4}\.)[ \t]*\*\d{1,2} [A-Za-z]{3,4}\.?[ \t]*/gm, "$1 ");
+  const lines = t.trimEnd().split("\n"), last = (lines[lines.length - 1] || "").trim();
+  const origLast = S.fbOrig.trimEnd().split("\n").pop().trim();
+  if (lines.length > 1 && /^\*\d{1,2} [A-Za-z]{3,4}\.?$/.test(last) && last !== origLast) lines.pop();
+  return lines.join("\n");
+}
 $("logcall").onclick = () => {
   const d = new Date(), p = x => String(x).padStart(2, "0");
   $("f_last").value = `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
@@ -288,7 +301,7 @@ $("cancel").onclick = () => $("dlg").close();
 $("save").onclick = async () => {
   const r = S.editing; $("derr").textContent = "";
   $("save").disabled = true; $("save").textContent = "Saving…";
-  const fbNow = $("f_fb").value.replace(/\r\n/g, "\n");
+  const fbNow = cleanFb($("f_fb").value);
   const changed = fbNow.trimEnd() !== S.fbOrig.trimEnd();
   const body = {name:S.name, pin:S.pin, tab:S.tab, row:r.n, userId:r.v[0],
     status:$("f_status").value, last:$("f_last").value, next:$("f_next").value, count:$("f_count").value,
@@ -297,6 +310,9 @@ $("save").onclick = async () => {
     const res = await fetch(API_URL, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(body)});
     const data = await res.json();
     if (data.error) throw new Error(data.error);
+    const fi = IX().fb;
+    if (changed && fi >= 0 && String(data.row.v[fi]).replace(/\r\n/g, "\n").trim() !== fbNow.trim())
+      throw new Error("The sheet did not take the feedback change. Redeploy the Apps Script as a New version, then try again.");
     const i = S.rows.findIndex(x => x.n === data.row.n); S.rows[i] = data.row;
     $("dlg").close(); render(data.row.n);
   }catch(e){
