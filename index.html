@@ -6,47 +6,67 @@
 <title>Feedback Calls – My Leads</title>
 <style>
   :root{
-    --bg:#f5f7f6; --surface:#fff; --ink:#1b2b27; --muted:#6b7b76; --line:#dbe3e0;
-    --brand:#0f6b5c; --brand-ink:#fff; --head:#e4efec; --warn:#b3261e; --ok:#0f6b5c;
+    --bg:#f4f8fc; --surface:#fff; --ink:#14263a; --muted:#5d7287; --line:#d6e2ee;
+    --brand:#55A5E4; --brand-ink:#0b2236; --head:#dcecf9; --warn:#b3261e;
   }
   @media (prefers-color-scheme: dark){
-    :root{ --bg:#101816; --surface:#17211e; --ink:#e6efec; --muted:#93a39e; --line:#2a3a35;
-      --brand:#3fb59f; --brand-ink:#08201b; --head:#1e2f2a; --warn:#ff8a80; --ok:#3fb59f; }
+    :root{ --bg:#0e1620; --surface:#15212d; --ink:#e7f0f8; --muted:#8fa5b8; --line:#26394b;
+      --head:#1d3145; --warn:#ff8a80; }
   }
   *{box-sizing:border-box}
   body{margin:0;font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink)}
-  header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+  header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:10px 16px;background:var(--brand);color:var(--brand-ink);position:sticky;top:0;z-index:10}
   header h1{font-size:16px;margin:0 auto 0 0}
-  input,select,button,textarea{font:inherit;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 10px}
+  header label{display:flex;gap:6px;align-items:center;font-weight:600}
+  input,select,button,textarea{font:inherit;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 10px}
   button{cursor:pointer}
   button.primary{background:var(--brand);color:var(--brand-ink);border-color:var(--brand);font-weight:600}
   button:disabled{opacity:.6;cursor:wait}
   :focus-visible{outline:2px solid var(--brand);outline-offset:2px}
-  #login{max-width:340px;margin:12vh auto;padding:24px;background:var(--surface);border:1px solid var(--line);border-radius:10px;display:grid;gap:12px}
+  header :focus-visible{outline-color:var(--brand-ink)}
+  #login{max-width:340px;margin:12vh auto;padding:24px;background:var(--surface);border:1px solid var(--line);border-top:5px solid var(--brand);border-radius:10px;display:grid;gap:12px}
   #login h1{margin:0 0 4px;font-size:18px}
+  #login label{display:grid;gap:4px;font-weight:600}
   .err{color:var(--warn);min-height:1.2em;margin:0}
   #app{display:none}
-  .bar{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px;align-items:center}
+  .bar{display:flex;flex-wrap:wrap;gap:8px;padding:10px 16px;align-items:center}
   .bar .count{margin-left:auto;color:var(--muted)}
-  .wrap{overflow:auto;max-height:calc(100vh - 120px);margin:0 16px 16px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
-  table{border-collapse:collapse;width:max-content;min-width:100%}
-  th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;max-width:280px}
-  th{position:sticky;top:0;background:var(--head);font-weight:600;white-space:nowrap;cursor:pointer;user-select:none;z-index:1}
-  th.nosort{cursor:default}
-  td.wrapcol{white-space:pre-line;min-width:220px}
-  tr:hover td{background:color-mix(in srgb,var(--head) 50%,transparent)}
+  .wrap{overflow:auto;max-height:calc(100vh - 110px);margin:0 16px 16px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+  table{border-collapse:separate;border-spacing:0;width:max-content;min-width:100%}
+  th,td{padding:6px 10px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);text-align:left;vertical-align:top;max-width:280px;color:var(--ink)}
+  th{position:sticky;top:0;background:var(--head);font-weight:600;white-space:nowrap;z-index:3}
+  th .lbl{margin-right:6px}
+  .fbtn{padding:0 6px;line-height:1.5;font-size:12px;border-color:transparent;background:transparent}
+  .fbtn:hover{border-color:var(--line)}
+  .fbtn.on{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+  td.fb{white-space:pre-wrap;min-width:340px;max-width:480px}
+  /* frozen columns: Edit, User ID, Firm name */
+  .s0,.s1,.s2{position:sticky;z-index:2;background:var(--surface)}
+  th.s0,th.s1,th.s2{z-index:5;background:var(--head)}
+  .s0{left:0;width:70px;min-width:70px;max-width:70px}
+  .s1{left:70px;width:76px;min-width:76px;max-width:76px}
+  .s2{left:146px;width:190px;min-width:190px;max-width:190px;box-shadow:2px 0 0 var(--line)}
+  @media (max-width:760px){ .s0,.s1,.s2{position:static!important;box-shadow:none} }
   tr.saved td{animation:flash 1.2s}
-  @keyframes flash{from{background:color-mix(in srgb,var(--ok) 30%,transparent)}to{background:transparent}}
+  @keyframes flash{from{outline:2px solid var(--brand);outline-offset:-2px}to{outline:2px solid transparent;outline-offset:-2px}}
   @media (prefers-reduced-motion: reduce){tr.saved td{animation:none}}
   .empty{padding:40px;text-align:center;color:var(--muted)}
-  dialog{border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);padding:0;width:min(520px,94vw)}
+  /* filter panel */
+  #fpanel{position:fixed;z-index:30;width:270px;background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.25);padding:10px;display:grid;gap:8px}
+  #fpanel .srt{display:flex;gap:6px}
+  #fpanel .srt button{flex:1}
+  #fpanel #fq{width:100%}
+  #flist{max-height:220px;overflow:auto;border:1px solid var(--line);border-radius:6px;padding:4px}
+  #flist label,#fpanel .all{display:flex;gap:8px;align-items:flex-start;padding:2px 4px;cursor:pointer}
+  #fpanel .actions{display:flex;gap:8px;justify-content:flex-end}
+  dialog{border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);padding:0;width:min(560px,94vw)}
   dialog::backdrop{background:rgba(0,0,0,.45)}
-  #form{padding:18px;display:grid;gap:12px}
+  #form{padding:18px;display:grid;gap:12px;border-top:5px solid var(--brand);border-radius:10px}
   #form h2{margin:0;font-size:16px}
   #form label{display:grid;gap:4px;font-weight:600}
   #form label small{font-weight:400;color:var(--muted)}
+  #f_fb{min-height:170px;resize:vertical}
   .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  pre#hist{margin:0;max-height:110px;overflow:auto;white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px;font:inherit}
   .actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
 </style>
 </head>
@@ -54,8 +74,12 @@
 
 <form id="login" onsubmit="return false">
   <h1>Feedback Calls</h1>
-  <label>Your name <select id="who"></select></label>
-  <label>PIN <input id="pin" type="password" inputmode="numeric" autocomplete="current-password"></label>
+  <label>Your name
+    <select id="who"></select>
+  </label>
+  <label>PIN
+    <input id="pin" type="password" inputmode="numeric" autocomplete="current-password" placeholder="Enter your PIN">
+  </label>
   <p id="err" class="err" role="alert"></p>
   <button class="primary" id="go">View my leads</button>
 </form>
@@ -69,25 +93,25 @@
   </header>
   <div class="bar">
     <input id="q" type="search" placeholder="Search name, mobile, email, feedback" size="34">
-    <select id="status"><option value="">All statuses</option></select>
+    <button id="clearf" hidden>Clear all filters</button>
     <span class="count" id="count"></span>
   </div>
-  <div class="wrap"><table id="tbl"></table></div>
+  <div class="wrap" id="wrap"><table id="tbl"></table></div>
 </div>
 
 <dialog id="dlg">
   <form id="form" onsubmit="return false">
     <h2 id="dtitle"></h2>
+    <label>Feedback <small>Edit anything, including earlier lines</small>
+      <textarea id="f_fb" maxlength="5000"></textarea></label>
+    <button type="button" id="addline">+ Add today's line (*26 Oct. )</button>
     <label>Status <select id="f_status"></select></label>
     <div class="two">
       <label>Last followup date <small id="h_last"></small><input type="date" id="f_last"></label>
       <label>Next followup date <small id="h_next"></small><input type="date" id="f_next"></label>
     </div>
     <label>No. of followup calls (max 10) <input type="number" id="f_count" min="0" max="10"></label>
-    <button type="button" id="logcall">Log a call today (sets last date to today, calls +1)</button>
-    <label>Earlier feedback <pre id="hist"></pre></label>
-    <label>New feedback <small>Saved as “*26 Oct. your note” below the earlier lines</small>
-      <textarea id="f_note" rows="3" maxlength="500"></textarea></label>
+    <button type="button" id="logcall">Log a call today (last date = today, calls +1)</button>
     <p id="derr" class="err" role="alert"></p>
     <div class="actions">
       <button type="button" id="cancel">Cancel</button>
@@ -97,18 +121,26 @@
 </dialog>
 
 <script>
-// ====== CONFIG: edit these two ======
-const API_URL = "https://script.google.com/macros/s/AKfycbzh4NQ-6GxBKS6i8UY6CjOqq7a14hSvqkAqA9omkDEKAcbgWqu4-9BdwhrTGpUfEyLB/exec";
+// ====== CONFIG: edit these ======
+const API_URL = "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
 const EXECUTIVES = ["Krishna","Ankur","Vivesh","Harshit Dixit","Jai"]; // must match CALL BY PERSON values
-// ====================================
+const FEEDBACK_FIRST = true;   // show FEEDBACK right after Firm Name (no scrolling). false = sheet order
+// ================================
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-let S = {name:"", pin:"", tab:"", headers:[], rows:[], statusOptions:[], sortCol:-1, sortAsc:true, editing:null};
+const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const S = {name:"", pin:"", tab:"", headers:[], rows:[], statusOptions:[], sort:{col:-1,asc:true}, filters:{}, editing:null, fbOrig:""};
 
-$("who").innerHTML = EXECUTIVES.map(n => `<option>${esc(n)}</option>`).join("");
+$("who").innerHTML = `<option value="" disabled selected>Select your name</option>` + EXECUTIVES.map(n => `<option>${esc(n)}</option>`).join("");
+
 const hi = re => S.headers.findIndex(h => re.test(h));
-const IX = () => ({status:hi(/^status$/i), last:hi(/^last followup/i), next:hi(/^next followup/i), count:hi(/^no\. of followup/i), fb:hi(/^feedback$/i), id:0});
+const IX = () => ({status:hi(/^status$/i), last:hi(/^last followup/i), next:hi(/^next followup/i), count:hi(/^no\. of followup/i), fb:hi(/^feedback$/i)});
+function order(){
+  const o = S.headers.map((_, i) => i), fb = IX().fb;
+  if (FEEDBACK_FIRST && fb > 2){ o.splice(fb, 1); o.splice(2, 0, fb); }
+  return o;
+}
 
 async function load(){
   const url = `${API_URL}?name=${encodeURIComponent(S.name)}&pin=${encodeURIComponent(S.pin)}&tab=${encodeURIComponent(S.tab)}`;
@@ -118,46 +150,126 @@ async function load(){
   if (data.error) throw new Error(data.error);
   Object.assign(S, {headers:data.headers, rows:data.rows, tab:data.tab, statusOptions:data.statusOptions || []});
   $("tab").innerHTML = data.tabs.map(t => `<option ${t===data.tab?"selected":""}>${esc(t)}</option>`).join("");
-  const si = IX().status;
-  const statuses = si < 0 ? [] : [...new Set(S.rows.map(r => r.v[si]).filter(Boolean))];
-  $("status").innerHTML = `<option value="">All statuses</option>` + statuses.map(s => `<option>${esc(s)}</option>`).join("");
   render();
 }
 
-function render(flashN){
-  const q = $("q").value.toLowerCase(), st = $("status").value, ix = IX();
-  let rows = S.rows.filter(r => (!q || r.v.join(" ").toLowerCase().includes(q)) && (!st || r.v[ix.status] === st));
-  if (S.sortCol >= 0){
-    const c = S.sortCol, d = S.sortAsc ? 1 : -1;
+function visibleRows(){
+  const q = $("q").value.toLowerCase();
+  let rows = S.rows.filter(r =>
+    (!q || r.v.join(" ").toLowerCase().includes(q)) &&
+    Object.entries(S.filters).every(([ci, set]) => set.has(r.v[ci])));
+  if (S.sort.col >= 0){
+    const c = S.sort.col, d = S.sort.asc ? 1 : -1;
     rows = [...rows].sort((a,b) => d * String(a.v[c]).localeCompare(String(b.v[c]), undefined, {numeric:true}));
   }
-  $("count").textContent = `${rows.length} of ${S.rows.length} leads`;
-  if (!rows.length){ $("tbl").innerHTML = `<tr><td class="empty">No leads match.</td></tr>`; return; }
-  const wide = S.headers.map(h => /feedback/i.test(h));
-  $("tbl").innerHTML =
-    `<thead><tr><th class="nosort"></th>${S.headers.map((h,i) => `<th data-i="${i}">${esc(h)}${S.sortCol===i?(S.sortAsc?" ▲":" ▼"):""}</th>`).join("")}</tr></thead>` +
-    `<tbody>${rows.map(r => `<tr class="${r.n===flashN?"saved":""}"><td><button data-edit="${r.n}">Edit</button></td>${r.v.map((v,i) => `<td class="${wide[i]?"wrapcol":""}">${esc(v)}</td>`).join("")}</tr>`).join("")}</tbody>`;
+  return rows;
 }
 
-// ---- edit modal ----
+function render(flashN){
+  const ord = order(), ix = IX(), rows = visibleRows();
+  const nf = Object.keys(S.filters).length;
+  $("clearf").hidden = !nf;
+  $("count").textContent = `${rows.length} of ${S.rows.length} leads`;
+  const sc = k => k < 2 ? `s${k+1}` : "";
+  const head = `<tr><th class="s0">Edit</th>${ord.map((ci,k) =>
+    `<th class="${sc(k)}"><span class="lbl">${esc(S.headers[ci])}${S.sort.col===ci?(S.sort.asc?" ▲":" ▼"):""}</span><button class="fbtn ${S.filters[ci]?"on":""}" data-f="${ci}" aria-label="Filter ${esc(S.headers[ci])}">▾</button></th>`).join("")}</tr>`;
+  const body = rows.length ? rows.map(r => `<tr data-n="${r.n}" class="${r.n===flashN?"saved":""}"><td class="s0"><button data-edit="${r.n}">Edit</button></td>${ord.map((ci,k) => {
+      const bg = r.bg && r.bg[ci];
+      const st = /^#[0-9a-f]{6}$/i.test(bg || "") && bg.toLowerCase() !== "#ffffff" ? ` style="background:${bg};color:#14263a"` : "";
+      return `<td class="${sc(k)} ${ci===ix.fb?"fb":""}"${st}>${esc(r.v[ci])}</td>`;
+    }).join("")}</tr>`).join("")
+    : `<tr><td class="empty" colspan="${ord.length+1}">No leads match.</td></tr>`;
+  $("tbl").innerHTML = `<thead>${head}</thead><tbody>${body}</tbody>`;
+}
+
+/* ---------- Excel-style column filter ---------- */
+let fp = null;
+function closeFilter(){ const p = $("fpanel"); if (p) p.remove(); fp = null; }
+
+function openFilter(ci, btn){
+  if (fp && fp.ci === ci){ closeFilter(); return; }
+  closeFilter();
+  const vals = [...new Set(S.rows.map(r => r.v[ci]))].sort((a,b) => String(a).localeCompare(String(b), undefined, {numeric:true}));
+  fp = {ci, vals, sel:new Set(S.filters[ci] || vals)};
+  const p = document.createElement("div");
+  p.id = "fpanel"; p.setAttribute("role", "dialog"); p.setAttribute("aria-label", "Filter " + S.headers[ci]);
+  p.innerHTML = `<div class="srt"><button data-s="1">Sort A→Z</button><button data-s="0">Sort Z→A</button></div>
+    <input type="search" id="fq" placeholder="Search values">
+    <label class="all"><input type="checkbox" id="fall"> (Select all)</label>
+    <div id="flist"></div>
+    <div class="actions"><button id="fclear">Clear</button><button class="primary" id="fok">OK</button></div>`;
+  document.body.appendChild(p);
+  const r = btn.getBoundingClientRect();
+  p.style.top = Math.min(r.bottom + 4, innerHeight - p.offsetHeight - 8) + "px";
+  p.style.left = Math.max(8, Math.min(r.left, innerWidth - p.offsetWidth - 8)) + "px";
+  drawList();
+  $("fq").focus();
+}
+
+function shownVals(){
+  const q = ($("fq").value || "").toLowerCase();
+  return fp.vals.map((v,i) => ({v,i})).filter(x => !q || String(x.v).toLowerCase().includes(q));
+}
+function drawList(){
+  const items = shownVals();
+  $("flist").innerHTML = items.slice(0, 300).map(x =>
+    `<label title="${esc(x.v)}"><input type="checkbox" data-i="${x.i}" ${fp.sel.has(x.v)?"checked":""}><span>${x.v===""?"(Blanks)":esc(String(x.v).slice(0,60))}</span></label>`).join("")
+    || `<div class="empty">No values</div>`;
+  $("fall").checked = items.length > 0 && items.every(x => fp.sel.has(x.v));
+}
+
+document.addEventListener("change", e => {
+  if (!fp) return;
+  if (e.target.id === "fall"){
+    shownVals().forEach(x => e.target.checked ? fp.sel.add(x.v) : fp.sel.delete(x.v)); drawList();
+  } else if (e.target.dataset.i !== undefined){
+    const v = fp.vals[+e.target.dataset.i]; e.target.checked ? fp.sel.add(v) : fp.sel.delete(v);
+    $("fall").checked = shownVals().every(x => fp.sel.has(x.v));
+  }
+});
+document.addEventListener("input", e => { if (fp && e.target.id === "fq") drawList(); });
+document.addEventListener("click", e => {
+  if (!fp) return;
+  if (e.target.id === "fok"){
+    if (fp.sel.size === fp.vals.length) delete S.filters[fp.ci]; else S.filters[fp.ci] = new Set(fp.sel);
+    closeFilter(); render();
+  } else if (e.target.id === "fclear"){
+    delete S.filters[fp.ci]; closeFilter(); render();
+  } else if (e.target.dataset.s !== undefined){
+    S.sort = {col:fp.ci, asc:e.target.dataset.s === "1"}; closeFilter(); render();
+  }
+});
+document.addEventListener("mousedown", e => { if (fp && !e.target.closest("#fpanel") && !e.target.closest(".fbtn")) closeFilter(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeFilter(); });
+$("wrap").addEventListener("scroll", closeFilter);
+$("clearf").onclick = () => { S.filters = {}; render(); };
+
+/* ---------- edit modal ---------- */
 function openEdit(n){
   const r = S.rows.find(x => x.n === n), ix = IX(); S.editing = r;
   $("dtitle").textContent = `${r.v[1] || "Lead"}  (ID ${r.v[0]})`;
-  const cur = r.v[ix.status];
+  const cur = ix.status >= 0 ? r.v[ix.status] : "";
   const opts = [...new Set([cur, ...S.statusOptions].filter(Boolean))];
   $("f_status").innerHTML = opts.map(o => `<option ${o===cur?"selected":""}>${esc(o)}</option>`).join("");
   $("f_last").value = ""; $("f_next").value = "";
   $("h_last").textContent = ix.last >= 0 ? `now: ${r.v[ix.last]}` : "";
   $("h_next").textContent = ix.next >= 0 ? `now: ${r.v[ix.next]}` : "";
   $("f_count").value = ix.count >= 0 ? r.v[ix.count] : "";
-  $("hist").textContent = ix.fb >= 0 ? (r.v[ix.fb] || "(none yet)") : "";
-  $("f_note").value = ""; $("derr").textContent = "";
+  S.fbOrig = ix.fb >= 0 ? String(r.v[ix.fb] || "").replace(/\r\n/g, "\n") : "";
+  $("f_fb").value = S.fbOrig;
+  $("derr").textContent = "";
   $("save").disabled = false; $("save").textContent = "Save to sheet";
   $("dlg").showModal();
+  const t = $("f_fb"); t.focus(); t.setSelectionRange(t.value.length, t.value.length); t.scrollTop = t.scrollHeight;
 }
 
+$("addline").onclick = () => {
+  const t = $("f_fb"), d = new Date();
+  t.value = (t.value && !t.value.endsWith("\n") ? t.value + "\n" : t.value) + `*${d.getDate()} ${MON[d.getMonth()]}. `;
+  t.focus(); t.setSelectionRange(t.value.length, t.value.length); t.scrollTop = t.scrollHeight;
+};
 $("logcall").onclick = () => {
-  const d = new Date(), p = x => String(x).padStart(2,"0");
+  const d = new Date(), p = x => String(x).padStart(2, "0");
   $("f_last").value = `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
   $("f_count").value = Math.min(10, (parseInt($("f_count").value) || 0) + 1);
 };
@@ -166,9 +278,11 @@ $("cancel").onclick = () => $("dlg").close();
 $("save").onclick = async () => {
   const r = S.editing; $("derr").textContent = "";
   $("save").disabled = true; $("save").textContent = "Saving…";
+  const fbNow = $("f_fb").value.replace(/\r\n/g, "\n");
+  const changed = fbNow.trimEnd() !== S.fbOrig.trimEnd();
   const body = {name:S.name, pin:S.pin, tab:S.tab, row:r.n, userId:r.v[0],
-    status:$("f_status").value, last:$("f_last").value, next:$("f_next").value,
-    count:$("f_count").value, note:$("f_note").value};
+    status:$("f_status").value, last:$("f_last").value, next:$("f_next").value, count:$("f_count").value,
+    fb: changed ? fbNow : null, fbOld: S.fbOrig};
   try{
     const res = await fetch(API_URL, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(body)});
     const data = await res.json();
@@ -181,26 +295,34 @@ $("save").onclick = async () => {
   }
 };
 
-// ---- login / events ----
+/* ---------- login / events ---------- */
 async function start(){
   $("err").textContent = "";
   try{
     await load();
     $("login").style.display = "none"; $("app").style.display = "block";
     $("title").textContent = `${S.name}'s leads`;
-    sessionStorage.setItem("fc", JSON.stringify({name:S.name,pin:S.pin}));
+    sessionStorage.setItem("fc", JSON.stringify({name:S.name, pin:S.pin}));
   }catch(e){ $("err").textContent = e.message; $("login").style.display = "grid"; $("app").style.display = "none"; }
 }
-$("go").onclick = () => { S.name = $("who").value; S.pin = $("pin").value; S.tab = ""; start(); };
+$("go").onclick = () => {
+  S.name = $("who").value; S.pin = $("pin").value; S.tab = "";
+  if (!S.name) return void ($("err").textContent = "Select your name");
+  if (!S.pin) return void ($("err").textContent = "Enter your PIN");
+  start();
+};
 $("pin").addEventListener("keydown", e => { if (e.key === "Enter") $("go").click(); });
-$("tab").onchange = () => { S.tab = $("tab").value; load().catch(e => alert(e.message)); };
+$("tab").onchange = () => { S.tab = $("tab").value; S.filters = {}; S.sort = {col:-1,asc:true}; load().catch(e => alert(e.message)); };
 $("refresh").onclick = () => load().catch(e => alert(e.message));
 $("logout").onclick = () => { sessionStorage.removeItem("fc"); location.reload(); };
-$("q").oninput = () => render(); $("status").onchange = () => render();
+$("q").oninput = () => render();
 $("tbl").onclick = e => {
-  const b = e.target.closest("[data-edit]"); if (b) return openEdit(+b.dataset.edit);
-  const th = e.target.closest("th[data-i]"); if (!th) return;
-  const i = +th.dataset.i; S.sortAsc = S.sortCol === i ? !S.sortAsc : true; S.sortCol = i; render();
+  const f = e.target.closest("[data-f]"); if (f) return openFilter(+f.dataset.f, f);
+  const b = e.target.closest("[data-edit]"); if (b) openEdit(+b.dataset.edit);
+};
+$("tbl").ondblclick = e => {
+  const tr = e.target.closest("tr[data-n]");
+  if (tr && !e.target.closest("button")) openEdit(+tr.dataset.n);
 };
 try{
   const s = JSON.parse(sessionStorage.getItem("fc") || "null");
