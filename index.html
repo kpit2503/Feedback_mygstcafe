@@ -98,6 +98,7 @@
     <span class="count" id="count"></span>
   </div>
   <div class="wrap" id="wrap"><table id="tbl"></table></div>
+  <p id="diag" style="margin:0 16px 16px;color:var(--muted);font-size:12px"></p>
 </div>
 
 <dialog id="dlg">
@@ -123,8 +124,9 @@
 
 <script>
 // ====== CONFIG: edit these ======
-const API_URL = "https://script.google.com/macros/s/AKfycbw8akeyaSOnZlrvlnnpD7iE9TwbHwjbxNMZP3_-u4uQE8CYaW19x95pDxbwWgRsfP9H/exec";
+const API_URL = "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
 const EXECUTIVES = ["Krishna","Ankur","Vivesh","Harshit Dixit","Jai"]; // must match CALL BY PERSON values
+const BUILD = "26Oct-d";
 const FEEDBACK_FIRST = true;   // show FEEDBACK right after Firm Name (no scrolling). false = sheet order
 // ================================
 
@@ -150,6 +152,7 @@ async function load(){
   catch(e){ throw new Error("Could not reach the sheet. Check API_URL and that the web app access is “Anyone”."); }
   if (data.error) throw new Error(data.error);
   if (S.tab && data.tab !== S.tab){ S.filters = {}; S.sort = {col:-1, asc:true}; }   // saved tab no longer exists
+  $("diag").textContent = `page build ${BUILD} · API …${API_URL.slice(-16)} · script version ${data.v ?? "none"}`;
   $("warn").hidden = data.v >= 3;
   $("warn").textContent = `The URL in API_URL is running an old script (version found: ${data.v ?? "none"}, needed: 3). Use the /exec URL of the deployment that has the new code: Deploy > Manage deployments, then copy its URL, or edit that deployment with Version: New version.`;
   Object.assign(S, {headers:data.headers, rows:data.rows, tab:data.tab, statusOptions:data.statusOptions || []});
