@@ -151,7 +151,7 @@ async function load(){
   if (data.error) throw new Error(data.error);
   if (S.tab && data.tab !== S.tab){ S.filters = {}; S.sort = {col:-1, asc:true}; }   // saved tab no longer exists
   $("warn").hidden = data.v >= 3;
-  $("warn").textContent = "The Google Apps Script is an old version, so edits will not save. In Apps Script: Deploy > Manage deployments > pencil > Version: New version > Deploy.";
+  $("warn").textContent = `The URL in API_URL is running an old script (version found: ${data.v ?? "none"}, needed: 3). Use the /exec URL of the deployment that has the new code: Deploy > Manage deployments, then copy its URL, or edit that deployment with Version: New version.`;
   Object.assign(S, {headers:data.headers, rows:data.rows, tab:data.tab, statusOptions:data.statusOptions || []});
   $("tab").innerHTML = data.tabs.map(t => `<option ${t===data.tab?"selected":""}>${esc(t)}</option>`).join("");
   render();
