@@ -122,7 +122,7 @@
 
 <script>
 // ====== CONFIG: edit these ======
-const API_URL = "https://script.google.com/macros/s/AKfycbzh4NQ-6GxBKS6i8UY6CjOqq7a14hSvqkAqA9omkDEKAcbgWqu4-9BdwhrTGpUfEyLB/exec";
+const API_URL = "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
 const EXECUTIVES = ["Krishna","Ankur","Vivesh","Harshit Dixit","Jai"]; // must match CALL BY PERSON values
 const FEEDBACK_FIRST = true;   // show FEEDBACK right after Firm Name (no scrolling). false = sheet order
 // ================================
@@ -148,6 +148,7 @@ async function load(){
   try { data = await (await fetch(url)).json(); }
   catch(e){ throw new Error("Could not reach the sheet. Check API_URL and that the web app access is “Anyone”."); }
   if (data.error) throw new Error(data.error);
+  if (S.tab && data.tab !== S.tab){ S.filters = {}; S.sort = {col:-1, asc:true}; }   // saved tab no longer exists
   Object.assign(S, {headers:data.headers, rows:data.rows, tab:data.tab, statusOptions:data.statusOptions || []});
   $("tab").innerHTML = data.tabs.map(t => `<option ${t===data.tab?"selected":""}>${esc(t)}</option>`).join("");
   render();
@@ -180,6 +181,15 @@ function render(flashN){
     }).join("")}</tr>`).join("")
     : `<tr><td class="empty" colspan="${ord.length+1}">No leads match.</td></tr>`;
   $("tbl").innerHTML = `<thead>${head}</thead><tbody>${body}</tbody>`;
+  saveSession();
+}
+
+// Keeps you logged in and on the same view after a browser refresh (cleared when the tab is closed)
+function saveSession(){
+  try{
+    sessionStorage.setItem("fc", JSON.stringify({name:S.name, pin:S.pin, tab:S.tab, q:$("q").value, sort:S.sort,
+      filters:Object.fromEntries(Object.entries(S.filters).map(([k, s]) => [k, [...s]]))}));
+  }catch(e){}
 }
 
 /* ---------- Excel-style column filter ---------- */
@@ -302,8 +312,11 @@ async function start(){
     await load();
     $("login").style.display = "none"; $("app").style.display = "block";
     $("title").textContent = `${S.name}'s leads`;
-    sessionStorage.setItem("fc", JSON.stringify({name:S.name, pin:S.pin}));
-  }catch(e){ $("err").textContent = e.message; $("login").style.display = "grid"; $("app").style.display = "none"; }
+    saveSession();
+  }catch(e){
+    if (/PIN/.test(e.message)) sessionStorage.removeItem("fc");
+    $("err").textContent = e.message; $("login").style.display = "grid"; $("app").style.display = "none";
+  }
 }
 $("go").onclick = () => {
   S.name = $("who").value; S.pin = $("pin").value; S.tab = "";
@@ -326,7 +339,16 @@ $("tbl").ondblclick = e => {
 };
 try{
   const s = JSON.parse(sessionStorage.getItem("fc") || "null");
-  if (s){ S.name = s.name; S.pin = s.pin; $("who").value = s.name; start(); }
+  if (s && s.name && s.pin){
+    S.name = s.name; S.pin = s.pin; S.tab = s.tab || "";
+    if (s.sort) S.sort = s.sort;
+    S.filters = Object.fromEntries(Object.entries(s.filters || {}).map(([k, a]) => [k, new Set(a)]));
+    $("q").value = s.q || ""; $("who").value = s.name;
+    // show the app straight away (no login flash) while the data loads
+    $("login").style.display = "none"; $("app").style.display = "block";
+    $("title").textContent = `${S.name}'s leads`; $("count").textContent = "Loading…";
+    start();
+  }
 }catch(e){}
 </script>
 </body>
